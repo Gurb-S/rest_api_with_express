@@ -11,17 +11,28 @@ const { Courses } = require('./models');
 const router = express.Router();
 
 router.get('/users', authenticateUser, asyncHandler(async (req,res) => {
-    //const user = req.currentUser;
+    const user = req.currentUser;
 
     res.json({
-        message: 'This is the api/users GET Route'
+        firstName: user.firstName,
+        lastName: user.lastName,
+        emailAddress: user.emailAddress
     });
 }));
 
 router.post('/users', asyncHandler(async (req,res) => {
-    res.json({
-        message: 'This is the api/users POST Route'
-    })
+    try{
+        await User.create(req.body);
+        res.status(201).json({ "message": "Account successfully created!"})
+    } catch(error){
+        if(error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueComstraintError'){
+            const errors = error.errors.map(err => err.message);
+            res.status(400).json({ errors })
+        }
+        else{
+            throw error;
+        }
+    }
 }));
 
 router.get('/courses', asyncHandler(async (req,res) => {
