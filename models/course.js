@@ -3,7 +3,7 @@
 const { Model, DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-    
+
     class Course extends Model {}
     Course.init({
         title: {
@@ -27,7 +27,16 @@ module.exports = (sequelize) => {
         },
         materialsNeeded: {
             type: DataTypes.STRING
-        }
+        },
     }, { sequelize })
+    Course.associate = (models) => {
+        Course.belongsTo(models.User, {
+            foreignKey: {
+                fieldName: 'userId',
+                allowNull: false
+            }
+        })
+    }
+
     return Course;
 }
