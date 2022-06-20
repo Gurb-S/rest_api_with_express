@@ -6,7 +6,7 @@ const { Model, DataTypes } = require('sequelize');
 //const { bcrypt } = require('bcryptjs')
 
 
-module.exports = (sequelize) =>{
+module.exports = (sequelize, DataTypes) =>{
     class User extends Model {}
     User.init({
         firstName: {
@@ -59,8 +59,8 @@ module.exports = (sequelize) =>{
                     msg: 'Please provide a password'
                 },
                 len: {
-                    args: [12,128],
-                    msg: 'The password should be between 12 and 128 characters in length'
+                    args: [8,128],
+                    msg: 'The password should be between 8 and 128 characters in length'
                 },
             }
         },
