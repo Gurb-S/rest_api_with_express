@@ -1,5 +1,6 @@
 'use strict';
 
+const { raw } = require('express');
 const express = require('express');
 const res = require('express/lib/response');
 const { asyncHandler } = require('./middleware/async-handler');
@@ -64,8 +65,25 @@ router.get('/courses', asyncHandler(async (req,res) => {
 
 router.get('/courses/:id', asyncHandler(async (req,res) => {
     const { id } = req.params;
+    const course = await Course.findOne({
+        where: {
+            id: id
+        },
+        attributes: ['title', 'description', 'estimatedTime', 'materialsNeeded'],
+        raw: true
+    })
+    if(course){
+        console.log('GOT COURSE!!!')
+    }
+    else if(!course){
+        console.log('FAILEDDDDDD')
+        res.json({
+            message: 'This course does not exist'
+        })
+    }
+    console.log(course);
     res.json({
-        message: `This is the api/courses/${id} GET Route`
+        course
     })
 }));
 
