@@ -37,14 +37,16 @@ router.post('/users', asyncHandler(async (req,res) => {
 
 router.get('/courses', asyncHandler(async (req,res) => {
     try{
-        const courses = await Course.findAll();
+        const course = await Course.findAll();
         console.log('SUCESSSSS')
-        const coursed = courses.map(course => { 
+        const courses = course.map(course => 
+        [  
             course.title, 
-            course.description,
-            course.estimatedTime
-        })
-        console.log(coursed)
+            course.description, 
+            course.estimatedTime, 
+            course.materialsNeeded
+        ])
+        console.log(courses)
         res.json({
             courses
         })
