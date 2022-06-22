@@ -91,9 +91,9 @@ router.post('/courses', asyncHandler(async (req,res) => {
     try{
         await Course.create(req.body);
         console.log(req.body)
-        res.status(201).json({ "message": "Account successfully created!"})
+        res.status(201).json({ "message": "Course successfully created!"})
     } catch(error){
-        if(error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueComstraintError'){
+        if(error.name === 'SequelizeValidationError'){
             const errors = error.errors.map(err => err.message);
             res.status(400).json({ errors })
         }
@@ -101,13 +101,27 @@ router.post('/courses', asyncHandler(async (req,res) => {
             throw error;
         }
     }
-    res.json({
-        message: 'This is the api/courses POST Route'
-    })
 }));
 
-router.put('/courses/:id', authenticateUser, asyncHandler(async (req,res) => {
+router.put('/courses/:id', asyncHandler(async (req,res) => {
     const { id } = req.params;
+    try{
+        await Course.update(req.body, {
+            where: {
+                id: id
+            }
+        });
+        console.log(req.body)
+        res.status(204).json({ "message": "Course successfully updated!"})
+    } catch(error){
+        if(error.name === 'SequelizeValidationError'){
+            const errors = error.errors.map(err => err.message);
+            res.status(400).json({ errors })
+        }
+        else{
+            throw error;
+        }
+    }
     res.json({
         message: `This is the api/courses/${id} PUT Route`
     })
