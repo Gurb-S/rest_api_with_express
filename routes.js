@@ -87,7 +87,7 @@ router.get('/courses/:id', asyncHandler(async (req,res) => {
     })
 }));
 
-router.post('/courses', asyncHandler(async (req,res) => {
+router.post('/courses', authenticateUser, asyncHandler(async (req,res) => {
     try{
         await Course.create(req.body);
         console.log(req.body)
@@ -103,7 +103,7 @@ router.post('/courses', asyncHandler(async (req,res) => {
     }
 }));
 
-router.put('/courses/:id', asyncHandler(async (req,res) => {
+router.put('/courses/:id', authenticateUser, asyncHandler(async (req,res) => {
     const { id } = req.params;
     try{
         await Course.update(req.body, {
@@ -129,9 +129,26 @@ router.put('/courses/:id', asyncHandler(async (req,res) => {
 
 router.delete('/courses/:id', authenticateUser, asyncHandler(async (req,res) => {
     const { id } = req.params;
-    res.json({
-        message: `This is the api/courses/${id} DELETE Route`
-    })
+    try{
+        await Course.destroy({
+            where: {
+                id: id
+            }
+        });
+        console.log(req.body)
+        res.status(204).json({ "message": "Course successfully deleted!"})
+    } catch(error){
+        if(error.name === 'SequelizeValidationError'){
+            const errors = error.errors.map(err => err.message);
+            res.status(400).json({ errors })
+        }
+        else{
+            throw error;
+        }
+    }
+    // res.json({
+    //     message: `This is the api/courses/${id} DELETE Route`
+    // })
 }))
 
 module.exports = router;
