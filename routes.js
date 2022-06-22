@@ -123,7 +123,7 @@ router.put('/courses/:id', asyncHandler(async (req,res) => {
         }
     }
     res.json({
-        message: `This is the api/courses/${id} PUT Route`
+        message: `This is the api/courses/${id} PUTTY Route`
     })
 }));
 
