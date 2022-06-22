@@ -1,13 +1,10 @@
 'use strict';
 
-const { raw } = require('express');
 const express = require('express');
-const res = require('express/lib/response');
 const { asyncHandler } = require('./middleware/async-handler');
 const { authenticateUser } = require('./middleware/authenticate_user')
 const { User }  = require('./models');
 const { Course } = require('./models');
-//const user = require('./models/user');
 
 const router = express.Router();
 
@@ -105,14 +102,25 @@ router.post('/courses', authenticateUser, asyncHandler(async (req,res) => {
 
 router.put('/courses/:id', authenticateUser, asyncHandler(async (req,res) => {
     const { id } = req.params;
+    const { userId } = req.body;
+    const user = req.currentUser.toJSON();
     try{
-        await Course.update(req.body, {
-            where: {
-                id: id
-            }
-        });
-        console.log(req.body)
-        res.status(204).json({ "message": "Course successfully updated!"})
+        if(user.id === userId){
+            await Course.update(req.body, {
+                where: {
+                    id: id,
+                    userId: userId
+                }
+            });
+            console.log(req.body)
+            console.log('UPDATEDDDDDDDDD')
+            res.status(204)
+        }
+        else{
+            console.log('DENIEDDDDDDD')
+            res.status(403).json({ "message": "You are not the owner of this course!"})
+        }
+
     } catch(error){
         if(error.name === 'SequelizeValidationError'){
             const errors = error.errors.map(err => err.message);
@@ -122,21 +130,35 @@ router.put('/courses/:id', authenticateUser, asyncHandler(async (req,res) => {
             throw error;
         }
     }
-    res.json({
-        message: `This is the api/courses/${id} PUTTY Route`
-    })
 }));
 
 router.delete('/courses/:id', authenticateUser, asyncHandler(async (req,res) => {
     const { id } = req.params;
+    const { userId } = req.body;
+    const user = req.currentUser.toJSON();
+    console.log(user)
     try{
-        await Course.destroy({
+        const course = await Course.findOne({
             where: {
-                id: id
+                id: id,
+                userId: user.id
             }
-        });
-        console.log(req.body)
-        res.status(204).json({ "message": "Course successfully deleted!"})
+        })
+        if(course){
+            await Course.destroy({
+                where: {
+                    id: id
+                }
+            });
+            console.log(req.body)
+            res.status(204)
+            console.log('GONNNNNNNEEEE')
+        }
+        else{
+            console.log('BETTERRR LUCK NEXT TIME')
+            res.status(403).json({ "message": "You are not the owner of this course!"});
+        }
+
     } catch(error){
         if(error.name === 'SequelizeValidationError'){
             const errors = error.errors.map(err => err.message);
@@ -146,9 +168,6 @@ router.delete('/courses/:id', authenticateUser, asyncHandler(async (req,res) => 
             throw error;
         }
     }
-    // res.json({
-    //     message: `This is the api/courses/${id} DELETE Route`
-    // })
 }))
 
 module.exports = router;
