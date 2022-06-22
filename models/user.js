@@ -89,6 +89,10 @@ module.exports = (sequelize, DataTypes) =>{
             }
         });
     }
+    User.addHook(
+        "beforeCreate",
+        user => (user.password = bcrypt.hashSync(user.password, 10))
+      );
 
     return User;
 }
