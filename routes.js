@@ -123,10 +123,18 @@ router.get('/courses/:id', asyncHandler(async (req,res) => {
 }));
 
 router.post('/courses', authenticateUser, asyncHandler(async (req,res) => {
+    
     try{
         await Course.create(req.body);
         console.log(req.body)
-        res.location('/');
+        const id  = await Course.findAll({
+            attributes: ['id'],
+            order : [ ['id', 'DESC'] ],
+            raw: true
+        });
+        const lastItemId = id[0].id;
+        console.log(lastItemId)
+        res.location(`/courses/${lastItemId}`);
         res.status(201).end();
     } catch(error){
         if(error.name === 'SequelizeValidationError'){
@@ -194,12 +202,12 @@ router.delete('/courses/:id', authenticateUser, asyncHandler(async (req,res) => 
                 }
             });
             console.log(req.body)
-            res.status(204)
+            res.status(204).end();
             console.log('GONNNNNNNEEEE')
         }
         else{
             console.log('BETTERRR LUCK NEXT TIME')
-            res.status(403).end();
+            res.status(403).json({ "message": "You are not the owner of this course!"})
         }
 
     } catch(error){
