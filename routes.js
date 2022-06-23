@@ -199,7 +199,7 @@ router.delete('/courses/:id', authenticateUser, asyncHandler(async (req,res) => 
         }
         else{
             console.log('BETTERRR LUCK NEXT TIME')
-            res.status(403).json({ "message": "You are not the owner of this course!"});
+            res.status(403).end();
         }
 
     } catch(error){
