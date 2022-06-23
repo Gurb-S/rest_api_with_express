@@ -21,6 +21,7 @@ router.get('/users', authenticateUser, asyncHandler(async (req,res) => {
 router.post('/users', asyncHandler(async (req,res) => {
     try{
         await User.create(req.body);
+        res.location('/');
         res.status(201).end();
     } catch(error){
         if(error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError'){
@@ -37,9 +38,6 @@ router.get('/courses', asyncHandler(async (req,res) => {
     try{
         const course = await Course.findAll();
         const usersData = await User.findAll({ raw: true});
-        //const usersDataJSON = usersData.toJSON();
-        //const user = req.currentUser.toJSON();
-        //console.log(usersData)
         const users = usersData.map(user => ({
             id: user.id,
             firstName: user.firstName,
@@ -58,25 +56,17 @@ router.get('/courses', asyncHandler(async (req,res) => {
             owner: {
 
             }
-            // if(course.userId === users.id){
-            //     return { firstName: users.firstName, lastName: users.lastName }
-            // }
         }))
         console.log(courses)
-        // courses.users.push("test user")
         for(let i = 0; i < courses.length; i++){
-            //console.log(`${users[0].id}`)
-           // console.log(i)
            for(let j = 0; j < users.length; j++){
             if(courses[i].userId === users[j].id){
-                //console.log(`${users[i].id}`)
-                courses[i].owner['name'] = `${users[j].firstName} ${users[j].lastName}`,
+                courses[i].owner['firstName'] = users[j].firstName
+                courses[i].owner['lastName'] = users[j].lastName
                 courses[i].owner['emailAddress'] = users[j].emailAddress
             }
            }
         }
-        //courses[0].users['Owner 1'] = users[0].firstName;
-        //console.log(courses[3].description)
         res.json({
             courses
         })
@@ -94,33 +84,50 @@ router.get('/courses', asyncHandler(async (req,res) => {
 
 router.get('/courses/:id', asyncHandler(async (req,res) => {
     const { id } = req.params;
-    const course = await Course.findOne({
-        where: {
-            id: id
-        },
-        attributes: ['title', 'description', 'estimatedTime', 'materialsNeeded'],
-        raw: true
-    })
-    if(course){
-        console.log('GOT COURSE!!!')
-    }
-    else if(!course){
-        console.log('FAILEDDDDDD')
-        res.json({
-            message: 'This course does not exist'
+    try{
+        const course = await Course.findOne({
+            where: {
+                id: id
+            },
+            attributes: ['title', 'description', 'estimatedTime', 'materialsNeeded', 'userId'],
+            raw: true
         })
+
+        if(course){
+            const owner = await User.findOne({ 
+                where: {
+                    id: course.userId
+                },
+                attributes: [ 'firstName', 'lastName', 'emailAddress'],
+                raw: true 
+            });
+                res.json({
+                    course,
+                    owner
+                })
+        }
+        else{
+            res.json({
+                "message": "This course does not exist!"
+            })
+        }
+    }catch(error){
+        if(error.name === 'SequelizeValidationError'){
+            const errors = error.errors.map(err => err.message);
+            res.status(400).json({ errors })
+        }
+        else{
+            throw error;
+        }
     }
-    console.log(course);
-    res.json({
-        course
-    })
 }));
 
 router.post('/courses', authenticateUser, asyncHandler(async (req,res) => {
     try{
         await Course.create(req.body);
         console.log(req.body)
-        res.status(201).json({ "message": "Course successfully created!"})
+        res.location('/');
+        res.status(201).end();
     } catch(error){
         if(error.name === 'SequelizeValidationError'){
             const errors = error.errors.map(err => err.message);
@@ -134,7 +141,6 @@ router.post('/courses', authenticateUser, asyncHandler(async (req,res) => {
 
 router.put('/courses/:id', authenticateUser, asyncHandler(async (req,res) => {
     const { id } = req.params;
-    const { userId } = req.body;
     const user = req.currentUser.toJSON();
     console.log(user)
     try{
@@ -172,7 +178,6 @@ router.put('/courses/:id', authenticateUser, asyncHandler(async (req,res) => {
 
 router.delete('/courses/:id', authenticateUser, asyncHandler(async (req,res) => {
     const { id } = req.params;
-    const { userId } = req.body;
     const user = req.currentUser.toJSON();
     console.log(user)
     try{
